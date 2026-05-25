@@ -58,7 +58,7 @@ const grid = document.getElementId('grid');
 const count = document.getElementById('count');
 
 async function init() {
-  const res = await fetch('articles.json');
+  const res = await fetch('/articles/articles.json');
   all = await res.json();
   const years = [...new Set(all.map(a => a.publish_date?.substring(0,4))].sort().reverse();
   years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
