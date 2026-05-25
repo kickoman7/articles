@@ -15,8 +15,8 @@
   .filters select { padding: .4rem .6rem; border: 1px solid #ddd; border-radius: 4px; font-size: .85rem; background: #fff; }
   .count { padding: .4rem; color: #666; font-size: .85rem; }
   .grid { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  .card { background: #fff; border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; transition: box-shadow .15s, transform .15s; }
-  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px; }
+  .card { background: #fff; border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; transition: box-shadow .15s; }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
   .card-meta { font-size: .75rem; color: #888; margin-bottom: .3rem; }
   .card-title { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; margin-bottom: .4rem; }
   .card-excerpt { font-size: .85rem; color: #555; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -25,14 +25,26 @@
   .card.outlet-the101 { border-left: 3px solid #f39c12; }
   .card.outlet-kickoman { border-left: 3px solid #27ae60; }
   .card.outlet-bangkokbiznews { border-left: 3px solid #8e44ad; }
+  .card.outlet-prachachat { border-left: 3px solid #e67e22; }
   .empty { text-align: center; padding: 3rem; color: #888; }
+  .loading { text-align: center; padding: 2rem; color: #888; }
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; }
+  .modal.show { display: flex; align-items: flex-start; justify-content: center; padding: 2rem; overflow-y: auto; }
+  .modal-content { background: #fff; border-radius: 12px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem; position: relative; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+  .modal-meta { font-size: .8rem; color: #888; margin-bottom: .5rem; }
+  .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #1a1a2e; }
+  .modal-body { font-size: .95rem; line-height: 1.8; color: #333; }
+  .modal-body p { margin-bottom: 1rem; }
+  .modal-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; }
+  .modal-actions a { color: #1a1a2e; font-size: .85rem; }
   @media (max-width: 600px) { header h1 { font-size: 1.3rem; } }
 </style>
 </head>
 <body>
 <header>
   <h1>📚 Pipat's Archive</h1>
-  <p>225 articles · ค้นหาได้เลย</p>
+  <p><span id="total-count">—</span> articles · ค้นหาได้เลย</p>
 </header>
 <div class="filters">
   <input type="text" id="search" placeholder="🔍 พิมพ์ค้นหา..." oninput="render()">
@@ -50,40 +62,123 @@
   </select>
   <span class="count" id="count"></span>
 </div>
-<div class="grid" id="grid"></div>
-<script>
-let all = [];
-const yearSel = document.getElementById('year');
-const grid = document.getElementId('grid');
-const count = document.getElementById('count');
+<div class="grid" id="grid"><div class="loading">กำลังโหลด...</div></div>
 
+<!-- Article Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-meta" id="modal-meta"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions"><a href="#" id="modal-link" target="_blank">อ่านต้นฉบับ →</a></div>
+  </div>
+</div>
+
+<script>
+// State
+let all = []; // {outlet, title, url, publish_date, excerpt, full_text?}
+const ITEMS_PER_PAGE = 20;
+let page = 0;
+let filtered = [];
+
+// DOM
+const grid = document.getElementById('grid');
+const count = document.getElementById('count');
+const yearSel = document.getElementById('year');
+const modal = document.getElementById('modal');
+
+// Load index (no full_text)
 async function init() {
-  const res = await fetch('./articles.json');
-  all = await res.json();
-  const years = [...new Set(all.map(a => a.publish_date?.substring(0,4))].sort().reverse();
-  years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
-  render();
+  try {
+    const res = await fetch('./index.json');
+    all = await res.json();
+    document.getElementById('total-count').textContent = all.length;
+    const years = [...new Set(all.map(a => a.publish_date?.substring(0,4)))].sort().reverse();
+    years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
+    render();
+  } catch(e) {
+    grid.innerHTML = '<div class="empty">โหลดไม่ได้: ' + e.message + '</div>';
+  }
 }
 
 function render() {
   const q = document.getElementById('search').value.toLowerCase();
   const outlet = document.getElementById('outlet').value;
   const year = yearSel.value;
-  const filtered = all.filter(a =>
-    (!q || a.title?.toLowerCase().includes(q) || a.excerpt?.toLowerCase().includes(q))
+  filtered = all.filter(a =>
+    (!q || a.title?.toLowerCase().includes(q) || (a.excerpt && a.excerpt.toLowerCase().includes(q)))
     && (!outlet || a.outlet === outlet)
     && (!year || a.publish_date?.startsWith(year))
   );
+  page = 0;
   count.textContent = filtered.length + ' บทความ';
-  grid.innerHTML = filtered.map(a => `
-    <div class="card outlet-${a.outlet}" onclick="window.open('${a.url}', '_blank')">
-      <div class="card-meta">${a.publish_date} · ${a.outlet}</div>
-      <div class="card-title">${a.title || 'Untitled'}</div>
-      <div class="card-excerpt">${a.excerpt || ''}</div>
-    </div>`).join('') || '<div class="empty">ไม่เจอบทความที่ค้นหา</div>';
+  renderPage();
 }
 
-document.getElementById('search').addEventListener('input', render);
+function renderPage() {
+  const start = page * ITEMS_PER_PAGE;
+  const slice = filtered.slice(start, start + ITEMS_PER_PAGE);
+  const isFirst = page === 0;
+  const isLast = start + ITEMS_PER_PAGE >= filtered.length;
+
+  let html = '';
+  if (isFirst) html += '<div id="list">';
+  slice.forEach(a => {
+    html += `<div class="card outlet-${a.outlet}" onclick="openArticle(${all.indexOf(a)})">
+      <div class="card-meta">${a.publish_date || ''} · ${a.outlet || ''}</div>
+      <div class="card-title">${a.title || 'Untitled'}</div>
+      <div class="card-excerpt">${a.excerpt || ''}</div>
+    </div>`;
+  });
+  if (isLast) html += '</div>';
+
+  // Pagination buttons
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  if (totalPages > 1) {
+    html += `<div style="text-align:center;padding:1rem;gap:.5rem;display:flex;justify-content:center">
+      <button onclick="changePage(-1)" ${isFirst?'disabled':''} style="padding:.4rem .8rem;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer">← ก่อนหน้า</button>
+      <span style="padding:.4rem">หน้า ${page+1}/${totalPages}</span>
+      <button onclick="changePage(1)" ${isLast?'disabled':''} style="padding:.4rem .8rem;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer">หน้าถัดไป →</button>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function changePage(dir) {
+  page += dir;
+  renderPage();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+async function openArticle(idx) {
+  const a = all[idx];
+  document.getElementById('modal-meta').textContent = (a.publish_date || '') + ' · ' + (a.outlet || '');
+  document.getElementById('modal-title').textContent = a.title || 'Untitled';
+  document.getElementById('modal-link').href = a.url || '#';
+
+  if (a.full_text) {
+    document.getElementById('modal-body').innerHTML = a.full_text;
+    modal.classList.add('show');
+  } else {
+    document.getElementById('modal-body').innerHTML = '<div class="loading">กำลังโหลด...</div>';
+    modal.classList.add('show');
+    // full_text not in index, redirect to original
+    window.open(a.url, '_blank');
+    // Also show excerpt if we have it
+    document.getElementById('modal-body').innerHTML = '<p>' + (a.excerpt || 'ดูต้นฉบับได้ที่ลิงก์ด้านล่าง') + '</p>';
+  }
+}
+
+function closeModal() {
+  modal.classList.remove('show');
+}
+
+// Close modal on backdrop click
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
 init();
 </script>
 </body>
