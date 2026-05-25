@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dr. Pipat — Articles Archive</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fafafa; color: #1a1a1a; line-height: 1.6; }
+  header { background: #1a1a2e; color: #fff; padding: 2rem; text-align: center; }
+  header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -.02em; }
+  header p { color: #888; margin-top: .5rem; font-size: .9rem; }
+  .filters { padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #eee; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .filters input { padding: .4rem .8rem; border: 1px solid #ddd; border-radius: 4px; font-size: .85rem; flex: 1; min-width: 200px; }
+  .filters select { padding: .4rem .6rem; border: 1px solid #ddd; border-radius: 4px; font-size: .85rem; background: #fff; }
+  .count { padding: .4rem; color: #666; font-size: .85rem; }
+  .grid { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  .card { background: #fff; border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; transition: box-shadow .15s, transform .15s; }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px; }
+  .card-meta { font-size: .75rem; color: #888; margin-bottom: .3rem; }
+  .card-title { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; margin-bottom: .4rem; }
+  .card-excerpt { font-size: .85rem; color: #555; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card.outlet-blockdit { border-left: 3px solid #00a3f9; }
+  .card.outlet-thaipublica { border-left: 3px solid #e74c3c; }
+  .card.outlet-the101 { border-left: 3px solid #f39c12; }
+  .card.outlet-kickoman { border-left: 3px solid #27ae60; }
+  .card.outlet-bangkokbiznews { border-left: 3px solid #8e44ad; }
+  .empty { text-align: center; padding: 3rem; color: #888; }
+  @media (max-width: 600px) { header h1 { font-size: 1.3rem; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 Dr. Pipat Archive</h1>
+  <p>225 articles · ค้นหาได้เลย</p>
+</header>
+<div class="filters">
+  <input type="text" id="search" placeholder="🔍 พิมพ์ค้นหา..." oninput="render()">
+  <select id="outlet" onchange="render()">
+    <option value="">ทุกแหล่ง</option>
+    <option value="blockdit">Blockdit</option>
+    <option value="thaipublica">ThaiPublica</option>
+    <option value="the101">The101</option>
+    <option value="kickoman">Kickoman</option>
+    <option value="bangkokbiznews">BangkokBiz</option>
+    <option value="prachachat">Prachachat</option>
+  </select>
+  <select id="year" onchange="render()">
+    <option value="">Timestamps ทุกปี</option>
+  </select>
+  <span class="count" id="count"></span>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+let all = [];
+const yearSel = document.getElementById('year');
+const grid = document.getElementId('grid');
+const count = document.getElementById('count');
+
+async function init() {
+  const res = await fetch('articles.json');
+  all = await res.json();
+  const years = [...new Set(all.map(a => a.publish_date?.substring(0,4))].sort().reverse();
+  years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
+  render();
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const outlet = document.getElementById('outlet').value;
+  const year = yearSel.value;
+  const filtered = all.filter(a =>
+    (!q || a.title?.toLowerCase().includes(q) || a.excerpt?.toLowerCase().includes(q))
+    && (!outlet || a.outlet === outlet)
+    && (!year || a.publish_date?.startsWith(year))
+  );
+  count.textContent = filtered.length + ' บทความ';
+  grid.innerHTML = filtered.map(a => `
+    <div class="card outlet-${a.outlet}" onclick="window.open('${a.url}', '_blank')">
+      <div class="card-meta">${a.publish_date} · ${a.outlet}</div>
+      <div class="card-title">${a.title || 'Untitled'}</div>
+      <div class="card-excerpt">${a.excerpt || ''}</div>
+    </div>`).join('') || '<div class="empty">ไม่เจอบทความที่ค้นหา</div>';
+}
+
+document.getElementById('search').addEventListener('input', render);
+init();
+</script>
+</body>
+</html>
