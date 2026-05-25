@@ -6,177 +6,466 @@
 <title>Pipat's Archive</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fafafa; color: #1a1a1a; line-height: 1.6; }
-  header { background: #1a1a2e; color: #fff; padding: 2rem; text-align: center; }
-  header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -.02em; }
-  header p { color: #888; margin-top: .5rem; font-size: .9rem; }
-  .filters { padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #eee; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
-  .filters input { padding: .4rem .8rem; border: 1px solid #ddd; border-radius: 4px; font-size: .85rem; flex: 1; min-width: 200px; }
-  .filters select { padding: .4rem .6rem; border: 1px solid #ddd; border-radius: 4px; font-size: .85rem; background: #fff; }
-  .count { padding: .4rem; color: #666; font-size: .85rem; }
-  .grid { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  .card { background: #fff; border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; transition: box-shadow .15s; }
-  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
-  .card-meta { font-size: .75rem; color: #888; margin-bottom: .3rem; }
-  .card-title { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; margin-bottom: .4rem; }
-  .card-excerpt { font-size: .85rem; color: #555; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .card.outlet-blockdit { border-left: 3px solid #00a3f9; }
-  .card.outlet-thaipublica { border-left: 3px solid #e74c3c; }
-  .card.outlet-the101 { border-left: 3px solid #f39c12; }
-  .card.outlet-kickoman { border-left: 3px solid #27ae60; }
-  .card.outlet-bangkokbiznews { border-left: 3px solid #8e44ad; }
-  .card.outlet-prachachat { border-left: 3px solid #e67e22; }
-  .empty { text-align: center; padding: 3rem; color: #888; }
-  .loading { text-align: center; padding: 2rem; color: #888; }
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; }
-  .modal.show { display: flex; align-items: flex-start; justify-content: center; padding: 2rem; overflow-y: auto; }
-  .modal-content { background: #fff; border-radius: 12px; max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem; position: relative; }
-  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-  .modal-meta { font-size: .8rem; color: #888; margin-bottom: .5rem; }
-  .modal-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: #1a1a2e; }
-  .modal-body { font-size: .95rem; line-height: 1.8; color: #333; }
+  :root {
+    --bg: #fafaf8;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text2: #666;
+    --accent: #1a1a2e;
+    --accent2: #3b82f6;
+    --border: #e5e5e5;
+    --tag-bg: #f0f0f0;
+    --code: 'JetBrains Mono', monospace;
+  }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+
+  /* HEADER */
+  header { background: var(--accent); color: #fff; padding: 3rem 2rem 2rem; }
+  header .inner { max-width: 1100px; margin: 0 auto; }
+  header h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: .3rem; }
+  header p { color: rgba(255,255,255,.6); font-size: .95rem; margin-bottom: 1.5rem; }
+  .hero-stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .hero-stat { background: rgba(255,255,255,.1); border-radius: 8px; padding: .6rem 1rem; }
+  .hero-stat .num { font-size: 1.3rem; font-weight: 700; }
+  .hero-stat .label { font-size: .7rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .05em; }
+
+  /* LAYOUT */
+  .layout { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; display: grid; grid-template-columns: 260px 1fr; gap: 2rem; }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+  /* SIDEBAR */
+  .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+  .widget { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+  .widget-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); font-weight: 600; margin-bottom: .8rem; }
+  .search-box { display: flex; gap: .4rem; }
+  .search-box input { flex: 1; padding: .5rem .8rem; border: 1px solid var(--border); border-radius: 8px; font-size: .85rem; background: var(--bg); }
+  .search-box button { padding: .5rem .8rem; background: var(--accent); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: .85rem; }
+
+  /* Sort */
+  .sort-bar { display: flex; flex-direction: column; gap: .4rem; }
+  .sort-btn { text-align: left; padding: .4rem .7rem; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); cursor: pointer; font-size: .82rem; transition: all .15s; }
+  .sort-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sort-btn:hover:not(.active) { border-color: var(--accent2); }
+
+  /* Outlet filter */
+  .outlet-list { display: flex; flex-direction: column; gap: .3rem; }
+  .outlet-item { display: flex; align-items: center; gap: .5rem; padding: .3rem .5rem; border-radius: 6px; cursor: pointer; font-size: .83rem; transition: background .1s; }
+  .outlet-item:hover { background: var(--tag-bg); }
+  .outlet-item.active { background: var(--accent); color: #fff; }
+  .outlet-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .outlet-count { margin-left: auto; font-size: .72rem; color: var(--text2); }
+  .outlet-item.active .outlet-count { color: rgba(255,255,255,.6); }
+
+  /* Tag cloud */
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .tag { display: inline-block; padding: .25rem .6rem; background: var(--tag-bg); border-radius: 20px; font-size: .72rem; cursor: pointer; transition: all .15s; border: 1px solid transparent; }
+  .tag:hover { border-color: var(--accent2); }
+  .tag.active { background: var(--accent); color: #fff; }
+
+  /* MAIN */
+  .main-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+  .main-hdr h2 { font-size: 1rem; font-weight: 600; }
+  .results-count { font-size: .8rem; color: var(--text2); }
+
+  /* FEATURED */
+  .featured { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; cursor: pointer; transition: box-shadow .2s; }
+  .featured:hover { box-shadow: 0 8px 30px rgba(0,0,0,.1); }
+  .featured-inner { padding: 1.5rem; }
+  .featured-meta { font-size: .72rem; color: var(--text2); margin-bottom: .4rem; }
+  .featured-title { font-size: 1.3rem; font-weight: 700; margin-bottom: .6rem; line-height: 1.4; }
+  .featured-excerpt { font-size: .87rem; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .featured-tags { margin-top: .8rem; display: flex; flex-wrap: wrap; gap: .3rem; }
+
+  /* ARTICLE GRID */
+  .article-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem; cursor: pointer; transition: all .2s; position: relative; }
+  .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.08); transform: translateY(-2px); }
+  .card-meta { font-size: .7rem; color: var(--text2); margin-bottom: .4rem; display: flex; gap: .5rem; }
+  .card-outlet { font-weight: 600; }
+  .card-title { font-size: .92rem; font-weight: 600; margin-bottom: .5rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-excerpt { font-size: .8rem; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: .7rem; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .card-tag { font-size: .65rem; padding: .15rem .5rem; border-radius: 20px; background: var(--tag-bg); color: var(--text2); }
+  .card.outlet-blockdit { border-top: 3px solid #00a3f9; }
+  .card.outlet-thaipublica { border-top: 3px solid #e74c3c; }
+  .card.outlet-the101 { border-top: 3px solid #f39c12; }
+  .card.outlet-kickoman { border-top: 3px solid #27ae60; }
+  .card.outlet-bangkokbiznews { border-top: 3px solid #8e44ad; }
+  .card.outlet-prachachat { border-top: 3px solid #e67e22; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--text2); }
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+  /* LOADING */
+  .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 16px; max-width: 720px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; }
+  .modal-hdr { padding: 1.5rem 1.5rem 0; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border: none; background: var(--tag-bg); border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+  .modal-meta { font-size: .75rem; color: var(--text2); margin-bottom: .5rem; }
+  .modal-title { font-size: 1.4rem; font-weight: 700; line-height: 1.4; margin-bottom: 1rem; }
+  .modal-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+  .modal-tag { font-size: .72rem; padding: .2rem .7rem; border-radius: 20px; background: var(--tag-bg); }
+  .modal-body { padding: 0 1.5rem 1.5rem; font-size: .92rem; line-height: 1.9; color: #333; }
   .modal-body p { margin-bottom: 1rem; }
-  .modal-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; }
-  .modal-actions a { color: #1a1a2e; font-size: .85rem; }
-  @media (max-width: 600px) { header h1 { font-size: 1.3rem; } }
+  .modal-body a { color: var(--accent2); text-decoration: underline; }
+  .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-orig { font-size: .8rem; color: var(--text2); }
+  .modal-orig a { color: var(--accent2); }
+
+  /* PAGINATION */
+  .pagination { display: flex; justify-content: center; gap: .5rem; padding: 1.5rem 0; }
+  .page-btn { padding: .4rem .9rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; font-size: .85rem; transition: all .15s; }
+  .page-btn:hover { border-color: var(--accent2); }
+  .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .page-btn:disabled { opacity: .4; cursor: default; }
+
+  /* Active filter banner */
+  .active-filters { display: none; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+  .active-filters.show { display: flex; }
+  .filter-chip { display: flex; align-items: center; gap: .3rem; padding: .3rem .7rem; background: var(--accent); color: #fff; border-radius: 20px; font-size: .78rem; }
+  .filter-chip button { background: none; border: none; color: inherit; cursor: pointer; font-size: 1rem; line-height: 1; }
 </style>
 </head>
 <body>
-<header>
-  <h1>📚 Pipat's Archive</h1>
-  <p><span id="total-count">—</span> articles · ค้นหาได้เลย</p>
-</header>
-<div class="filters">
-  <input type="text" id="search" placeholder="🔍 พิมพ์ค้นหา..." oninput="render()">
-  <select id="outlet" onchange="render()">
-    <option value="">ทุกแหล่ง</option>
-    <option value="blockdit">Blockdit</option>
-    <option value="thaipublica">ThaiPublica</option>
-    <option value="the101">The101</option>
-    <option value="kickoman">Kickoman</option>
-    <option value="bangkokbiznews">BangkokBiz</option>
-    <option value="prachachat">Prachachat</option>
-  </select>
-  <select id="year" onchange="render()">
-    <option value="">Timestamps ทุกปี</option>
-  </select>
-  <span class="count" id="count"></span>
-</div>
-<div class="grid" id="grid"><div class="loading">กำลังโหลด...</div></div>
 
-<!-- Article Modal -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeModal()">×</button>
-    <div class="modal-meta" id="modal-meta"></div>
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-actions"><a href="#" id="modal-link" target="_blank">อ่านต้นฉบับ →</a></div>
+<header>
+  <div class="inner">
+    <h1>📚 Pipat's Archive</h1>
+    <p>คลังบทความเศรษฐกิจ การเงิน และนโยบาย — โดย ดร.พิพัฒน์ วิญญัฏฐ์</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num" id="stat-total">—</div><div class="label">บทความ</div></div>
+      <div class="hero-stat"><div class="num" id="stat-outlets">—</div><div class="label">แหล่ง</div></div>
+      <div class="hero-stat"><div class="num" id="stat-tags">—</div><div class="label">หัวข้อ</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="widget">
+      <div class="widget-title">🔍 ค้นหา</div>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="พิมพ์ค้นหา...">
+        <button onclick="doSearch()">ค้นหา</button>
+      </div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">📅 เรียงตาม</div>
+      <div class="sort-bar">
+        <button class="sort-btn active" data-sort="date-desc" onclick="setSort(this)">ใหม่ล่าสุด</button>
+        <button class="sort-btn" data-sort="date-asc" onclick="setSort(this)">เก่าสุด</button>
+        <button class="sort-btn" data-sort="alpha" onclick="setSort(this)">ตามตัวอักษร</button>
+      </div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">📌 แหล่งที่มา</div>
+      <div class="outlet-list" id="outlet-list"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-title">🏷️ หัวข้อ</div>
+      <div class="tag-cloud" id="tag-cloud"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="active-filters" id="active-filters"></div>
+    <div class="main-hdr">
+      <h2 id="section-title">ทุกบทความ</h2>
+      <span class="results-count" id="results-count"></span>
+    </div>
+
+    <!-- Featured -->
+    <div class="featured" id="featured" onclick="openFeatured()">
+      <div class="featured-inner">
+        <div class="featured-meta" id="featured-meta"></div>
+        <div class="featured-title" id="featured-title"></div>
+        <div class="featured-excerpt" id="featured-excerpt"></div>
+        <div class="featured-tags" id="featured-tags"></div>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="article-grid" id="article-grid"></div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <div>ไม่เจอบทความที่ค้นหา</div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="e=>{if(e.target.id==='modal-overlay')closeModal()}">
+  <div class="modal">
+    <div class="modal-hdr">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div class="modal-meta" id="m-meta"></div>
+      <div class="modal-title" id="m-title"></div>
+      <div class="modal-tags" id="m-tags"></div>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+    <div class="modal-footer">
+      <span class="modal-orig">📎 <a href="#" id="m-link" target="_blank">อ่านต้นฉบับ</a></span>
+      <span style="font-size:.75rem;color:var(--text2)" id="m-len"></span>
+    </div>
   </div>
 </div>
 
 <script>
-// State
-let all = []; // {outlet, title, url, publish_date, excerpt, full_text?}
-const ITEMS_PER_PAGE = 20;
-let page = 0;
+// ─── STATE ───────────────────────────────────────────────
+let all = [];
 let filtered = [];
+let currentPage = 0;
+const PER_PAGE = 12;
+let sort = 'date-desc';
+let activeOutlet = '';
+let activeTag = '';
+let searchQuery = '';
+let allTags = {};
+let outletCounts = {};
+const OUTLET_COLORS = {
+  blockdit: '#00a3f9', thaipublica: '#e74c3c',
+  the101: '#f39c12', kickoman: '#27ae60',
+  bangkokbiznews: '#8e44ad', prachachat: '#e67e22'
+};
 
-// DOM
-const grid = document.getElementById('grid');
-const count = document.getElementById('count');
-const yearSel = document.getElementById('year');
-const modal = document.getElementById('modal');
-
-// Load index (no full_text)
+// ─── INIT ────────────────────────────────────────────────
 async function init() {
-  try {
-    const res = await fetch('./index.json');
-    all = await res.json();
-    document.getElementById('total-count').textContent = all.length;
-    const years = [...new Set(all.map(a => a.publish_date?.substring(0,4)))].sort().reverse();
-    years.forEach(y => { const o = document.createElement('option'); o.value = y; o.textContent = y; yearSel.appendChild(o); });
-    render();
-  } catch(e) {
-    grid.innerHTML = '<div class="empty">โหลดไม่ได้: ' + e.message + '</div>';
-  }
+  const res = await fetch('./index.json');
+  all = await res.json();
+  buildStats();
+  buildOutlets();
+  buildTagCloud();
+  applyFilters();
 }
 
-function render() {
-  const q = document.getElementById('search').value.toLowerCase();
-  const outlet = document.getElementById('outlet').value;
-  const year = yearSel.value;
-  filtered = all.filter(a =>
-    (!q || a.title?.toLowerCase().includes(q) || (a.excerpt && a.excerpt.toLowerCase().includes(q)))
-    && (!outlet || a.outlet === outlet)
-    && (!year || a.publish_date?.startsWith(year))
-  );
-  page = 0;
-  count.textContent = filtered.length + ' บทความ';
+// ─── STATS ───────────────────────────────────────────────
+function buildStats() {
+  document.getElementById('stat-total').textContent = all.length;
+  const outlets = [...new Set(all.map(a => a.outlet))];
+  document.getElementById('stat-outlets').textContent = outlets.length;
+  const tags = new Set();
+  all.forEach(a => a.tags.forEach(t => tags.add(t)));
+  document.getElementById('stat-tags').textContent = tags.size;
+}
+
+// ─── OUTLETS ─────────────────────────────────────────────
+function buildOutlets() {
+  outletCounts = {};
+  all.forEach(a => { outletCounts[a.outlet] = (outletCounts[a.outlet] || 0) + 1; });
+  const list = document.getElementById('outlet-list');
+  list.innerHTML = '';
+  const sorted = Object.entries(outletCounts).sort((a,b) => b[1]-a[1]);
+  // All
+  const allItem = document.createElement('div');
+  allItem.className = 'outlet-item' + (activeOutlet === '' ? ' active' : '');
+  allItem.innerHTML = `<span class="outlet-dot" style="background:#888"></span>ทุกแหล่ง<span class="outlet-count">${all.length}</span>`;
+  allItem.onclick = () => { activeOutlet = ''; updateOutletUI(); applyFilters(); };
+  list.appendChild(allItem);
+  sorted.forEach(([o, c]) => {
+    const item = document.createElement('div');
+    item.className = 'outlet-item' + (activeOutlet === o ? ' active' : '');
+    item.innerHTML = `<span class="outlet-dot" style="background:${OUTLET_COLORS[o]||'#888'}"></span>${o}<span class="outlet-count">${c}</span>`;
+    item.onclick = () => { activeOutlet = o; updateOutletUI(); applyFilters(); };
+    list.appendChild(item);
+  });
+}
+
+function updateOutletUI() {
+  document.querySelectorAll('.outlet-item').forEach(el => {
+    const txt = el.textContent;
+    const isAll = txt.startsWith('ทุกแหล่ง');
+    const matches = isAll ? activeOutlet === '' : el.textContent.includes(activeOutlet);
+    el.classList.toggle('active', matches);
+  });
+}
+
+// ─── TAG CLOUD ───────────────────────────────────────────
+function buildTagCloud() {
+  allTags = {};
+  all.forEach(a => a.tags.forEach(t => { allTags[t] = (allTags[t] || 0) + 1; }));
+  const cloud = document.getElementById('tag-cloud');
+  cloud.innerHTML = '';
+  Object.entries(allTags).sort((a,b) => b[1]-a[1]).forEach(([tag, count]) => {
+    const el = document.createElement('span');
+    el.className = 'tag' + (activeTag === tag ? ' active' : '');
+    el.textContent = tag + ' (' + count + ')';
+    el.onclick = () => {
+      activeTag = activeTag === tag ? '' : tag;
+      updateTagUI();
+      applyFilters();
+    };
+    cloud.appendChild(el);
+  });
+}
+
+function updateTagUI() {
+  document.querySelectorAll('.tag').forEach(el => {
+    el.classList.toggle('active', el.textContent.startsWith(activeTag));
+  });
+}
+
+// ─── FILTERING ───────────────────────────────────────────
+function applyFilters() {
+  filtered = all.filter(a => {
+    const q = searchQuery.toLowerCase();
+    const matchQ = !q || a.title?.toLowerCase().includes(q) || (a.excerpt && a.excerpt.toLowerCase().includes(q));
+    const matchO = !activeOutlet || a.outlet === activeOutlet;
+    const matchT = !activeTag || a.tags.includes(activeTag);
+    return matchQ && matchO && matchT;
+  });
+  sortArticles();
+  currentPage = 0;
+  renderFeatured();
   renderPage();
+  updateActiveFilters();
+  updateSectionTitle();
 }
 
-function renderPage() {
-  const start = page * ITEMS_PER_PAGE;
-  const slice = filtered.slice(start, start + ITEMS_PER_PAGE);
-  const isFirst = page === 0;
-  const isLast = start + ITEMS_PER_PAGE >= filtered.length;
+function sortArticles() {
+  if (sort === 'date-desc') filtered.sort((a,b) => (b.publish_date||'').localeCompare(a.publish_date||''));
+  else if (sort === 'date-asc') filtered.sort((a,b) => (a.publish_date||'').localeCompare(b.publish_date||''));
+  else filtered.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+}
 
-  let html = '';
-  if (isFirst) html += '<div id="list">';
-  slice.forEach(a => {
-    html += `<div class="card outlet-${a.outlet}" onclick="openArticle(${all.indexOf(a)})">
-      <div class="card-meta">${a.publish_date || ''} · ${a.outlet || ''}</div>
+// ─── ACTIVE FILTERS BANNER ───────────────────────────────
+function updateActiveFilters() {
+  const banner = document.getElementById('active-filters');
+  const chips = [];
+  if (activeOutlet) chips.push(`<span class="filter-chip">📌 ${activeOutlet} <button onclick="clearOutlet()">×</button></span>`);
+  if (activeTag) chips.push(`<span class="filter-chip">🏷️ ${activeTag} <button onclick="clearTag()">×</button></span>`);
+  if (searchQuery) chips.push(`<span class="filter-chip">🔍 "${searchQuery}" <button onclick="clearSearch()">×</button></span>`);
+  banner.innerHTML = chips.join('');
+  banner.className = 'active-filters' + (chips.length ? ' show' : '');
+}
+
+function clearOutlet() { activeOutlet = ''; buildOutlets(); applyFilters(); }
+function clearTag() { activeTag = ''; updateTagUI(); applyFilters(); }
+function clearSearch() { searchQuery = ''; document.getElementById('search-input').value = ''; applyFilters(); }
+
+// ─── SECTION TITLE ────────────────────────────────────────
+function updateSectionTitle() {
+  const t = document.getElementById('section-title');
+  if (activeOutlet) t.textContent = activeOutlet;
+  else if (activeTag) t.textContent = activeTag;
+  else if (searchQuery) t.textContent = 'ผลการค้นหา';
+  else t.textContent = 'ทุกบทความ';
+  document.getElementById('results-count').textContent = filtered.length + ' บทความ';
+}
+
+// ─── FEATURED ─────────────────────────────────────────────
+function renderFeatured() {
+  if (filtered.length === 0) { document.getElementById('featured').style.display = 'none'; return; }
+  document.getElementById('featured').style.display = 'block';
+  const a = filtered[0];
+  document.getElementById('featured-meta').textContent = (a.publish_date || '') + ' · ' + (a.outlet || '');
+  document.getElementById('featured-title').textContent = a.title || 'Untitled';
+  document.getElementById('featured-excerpt').textContent = a.excerpt || '';
+  document.getElementById('featured-tags').innerHTML = a.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+  document.getElementById('featured').onclick = () => openArticle(0);
+}
+
+function openFeatured() { openArticle(0); }
+
+// ─── RENDER PAGE ─────────────────────────────────────────
+function renderPage() {
+  const grid = document.getElementById('article-grid');
+  const empty = document.getElementById('empty');
+  const pag = document.getElementById('pagination');
+  const start = currentPage * PER_PAGE;
+  const slice = filtered.slice(start, start + PER_PAGE);
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+
+  if (filtered.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    pag.innerHTML = '';
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+
+  grid.innerHTML = slice.map((a, i) => {
+    const globalIdx = start + i;
+    return `<div class="card outlet-${a.outlet}" onclick="openArticle(${globalIdx})">
+      <div class="card-meta">
+        <span class="card-outlet">${a.outlet || ''}</span>
+        <span>· ${a.publish_date || ''}</span>
+      </div>
       <div class="card-title">${a.title || 'Untitled'}</div>
       <div class="card-excerpt">${a.excerpt || ''}</div>
+      <div class="card-tags">${a.tags.slice(0,3).map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
     </div>`;
-  });
-  if (isLast) html += '</div>';
+  }).join('');
 
-  // Pagination buttons
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  if (totalPages > 1) {
-    html += `<div style="text-align:center;padding:1rem;gap:.5rem;display:flex;justify-content:center">
-      <button onclick="changePage(-1)" ${isFirst?'disabled':''} style="padding:.4rem .8rem;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer">← ก่อนหน้า</button>
-      <span style="padding:.4rem">หน้า ${page+1}/${totalPages}</span>
-      <button onclick="changePage(1)" ${isLast?'disabled':''} style="padding:.4rem .8rem;border:1px solid #ddd;background:#fff;border-radius:4px;cursor:pointer">หน้าถัดไป →</button>
-    </div>`;
+  // Pagination
+  if (totalPages <= 1) { pag.innerHTML = ''; return; }
+  let phtml = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===0?'disabled':''}>← ก่อนหน้า</button>`;
+  for (let p = 0; p < totalPages; p++) {
+    if (p === 0 || p === totalPages-1 || (p >= currentPage-1 && p <= currentPage+1)) {
+      phtml += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p+1}</button>`;
+    } else if (p === currentPage-2 || p === currentPage+2) {
+      phtml += `<span style="padding:0 .3rem;color:var(--text2)">…</span>`;
+    }
   }
-
-  grid.innerHTML = html;
+  phtml += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages-1?'disabled':''}>หน้าถัดไป →</button>`;
+  pag.innerHTML = phtml;
 }
 
-function changePage(dir) {
-  page += dir;
+function goPage(p) { currentPage = p; renderPage(); window.scrollTo({top: 0, behavior: 'smooth'}); }
+
+// ─── SORT ────────────────────────────────────────────────
+function setSort(btn) {
+  sort = btn.dataset.sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  sortArticles();
+  currentPage = 0;
   renderPage();
-  window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-async function openArticle(idx) {
-  const a = all[idx];
-  document.getElementById('modal-meta').textContent = (a.publish_date || '') + ' · ' + (a.outlet || '');
-  document.getElementById('modal-title').textContent = a.title || 'Untitled';
-  document.getElementById('modal-link').href = a.url || '#';
+// ─── SEARCH ──────────────────────────────────────────────
+function doSearch() {
+  searchQuery = document.getElementById('search-input').value.trim();
+  applyFilters();
+}
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
-  if (a.full_text) {
-    document.getElementById('modal-body').innerHTML = a.full_text;
-    modal.classList.add('show');
-  } else {
-    document.getElementById('modal-body').innerHTML = '<div class="loading">กำลังโหลด...</div>';
-    modal.classList.add('show');
-    // full_text not in index, redirect to original
-    window.open(a.url, '_blank');
-    // Also show excerpt if we have it
-    document.getElementById('modal-body').innerHTML = '<p>' + (a.excerpt || 'ดูต้นฉบับได้ที่ลิงก์ด้านล่าง') + '</p>';
-  }
+// ─── MODAL ───────────────────────────────────────────────
+function openArticle(localIdx) {
+  const a = filtered[localIdx];
+  if (!a) return;
+  document.getElementById('m-meta').textContent = (a.publish_date || '') + ' · ' + (a.outlet || '');
+  document.getElementById('m-title').textContent = a.title || 'Untitled';
+  document.getElementById('m-tags').innerHTML = a.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
+  document.getElementById('m-link').href = a.url || '#';
+  document.getElementById('m-len').textContent = a.len ? Math.round(a.len/1000) + 'k chars' : '';
+  document.getElementById('m-body').innerHTML = a.excerpt
+    ? '<p>' + a.excerpt.replace(/\.\.\./g, '') + '</p><p style="margin-top:1rem;font-size:.85rem;color:var(--text2)">📖 อ่านต่อได้ที่ลิงก์ด้านล่าง</p>'
+    : '<p>ไม่มี preview — กดดูต้นฉบับได้เลย</p>';
+  document.getElementById('modal-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-  modal.classList.remove('show');
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.body.style.overflow = '';
 }
-
-// Close modal on backdrop click
-modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 init();
